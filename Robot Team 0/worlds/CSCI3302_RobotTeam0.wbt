@@ -1,0 +1,49 @@
+#VRML_SIM R2020b utf8
+WorldInfo {
+  info [
+    "CSCI 3302 Lab 5: Path Planning"
+    "Prof. Brad Hayes, University of Colorado Boulder, Fall 2020"
+  ]
+  title "E-Puck"
+  coordinateSystem "NUE"
+  lineScale 0.04
+}
+Viewpoint {
+  orientation 0.7196542749895515 -0.6722467836137779 -0.173729635958272 5.59365950060656
+  position 0.9017147997505155 1.438554570272771 2.0358441625200103
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+DEF Goal Solid {
+  translation -0.514244 0.0399361 -0.481529
+  rotation 0 1 0 -5.307179586466759e-06
+  scale 0.1 0.1 0.1
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "texture/goal_mark.png"
+          ]
+          filtering 0
+        }
+        metalness 0
+      }
+      geometry Plane {
+      }
+    }
+  ]
+  name "Goal"
+}
+Ball {
+  translation -0.39 0.0325 -0.37
+  color 1 0 0
+}
+E-puck {
+  translation 0.43 0 0.56
+  supervisor TRUE
+}
+CircleArena {
+}
