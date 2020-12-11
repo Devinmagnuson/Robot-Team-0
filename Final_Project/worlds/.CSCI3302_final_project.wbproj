@@ -8,4 +8,4 @@ orthographicViewHeight: 1
 textFiles: 0 "controllers/csci3302_final_project_base/csci3302_final_project_base.py"
 consoles: Console:All:All
 renderingDevicePerspectives: e-puck:camera;0;1.92308;0.361066;0.0129151
-renderingDevicePerspectives: e-puck:camera1;1;1.21875;0.349036;0
+renderingDevicePerspectives: e-puck:camera1;1;1.21875;0;0.00738007
