@@ -9,8 +9,8 @@ WorldInfo {
   lineScale 0.04
 }
 Viewpoint {
-  orientation 0.7196542749895515 -0.6722467836137779 -0.173729635958272 5.59365950060656
-  position 0.9017147997505155 1.438554570272771 2.0358441625200103
+  orientation 0.7109991792229325 -0.6711806957636076 -0.20975376225134987 5.454937717754765
+  position 0.9524284620648183 1.389723998659136 1.040255864961065
 }
 TexturedBackground {
 }
@@ -37,13 +37,58 @@ DEF Goal Solid {
   ]
   name "Goal"
 }
+Solid {
+  translation 0.305876 0.0525 0.401848
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 0 0
+        metalness 0
+      }
+      geometry Sphere {
+        radius 0.04
+      }
+    }
+  ]
+  boundingObject Shape {
+    appearance PBRAppearance {
+      baseColor 1 0 0
+      roughness 1
+      metalness 0
+      emissiveColor 1 0 0
+    }
+    geometry Sphere {
+      radius 0.04
+    }
+  }
+  physics Physics {
+  }
+  recognitionColors [
+    0.5 0 0
+    1 0 0
+  ]
+}
 Ball {
-  translation -0.39 0.0325 -0.37
+  translation 0.0128221 0.0325 0.341722
   color 1 0 0
 }
 E-puck {
-  translation 0.43 0 0.56
+  translation 0.358011 -1.11022e-14 -0.480105
+  rotation 0 1 0 3.14159
+  controller "RobotTeam0"
   supervisor TRUE
+  camera_antiAliasing TRUE
+  turretSlot [
+    Camera {
+      name "camera1"
+      recognitionColors [
+        1 0 0
+        0.5 0 0
+      ]
+      recognition Recognition {
+      }
+    }
+  ]
 }
 CircleArena {
 }
