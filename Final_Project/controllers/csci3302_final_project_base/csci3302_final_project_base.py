@@ -107,6 +107,12 @@ rightMotor.setPosition(float('inf'))
 leftMotor.setVelocity(0.0)
 rightMotor.setVelocity(0.0)
 
+# get the time step of the current world.
+timestep = int(robot.getBasicTimeStep())
+camera = robot.getCamera('camera1')
+camera.enable(timestep)
+camera.recognitionEnable(timestep)
+
 MAX_VEL_REDUCTION = 0.2
 
 
