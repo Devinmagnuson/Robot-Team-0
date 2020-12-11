@@ -9,8 +9,8 @@ WorldInfo {
   lineScale 0.04
 }
 Viewpoint {
-  orientation 0.6337870951295705 -0.7684736862148942 -0.08810284696031817 5.925273148458032
-  position 0.8891940761039964 0.6252664449157587 2.0575726662445275
+  orientation 0.019047684516850696 -0.7252909874144833 -0.6881788788460964 3.1817370374089027
+  position 0.5008320146025825 1.219044752751387 0.47900901380460353
   follow "e-puck"
 }
 TexturedBackground {
@@ -32,15 +32,16 @@ RectangleArena {
   wallHeight 0.05
 }
 Solid {
-  translation 0.670555 0.04 0.624188
+  translation 0.6002 0.05 0.851963
+  rotation 0 1 0 4.692820414042842e-06
   children [
     Shape {
       appearance PBRAppearance {
         baseColor 1 0 0
         metalness 0
       }
-      geometry Sphere {
-        radius 0.04
+      geometry Box {
+        size 0.05 0.05 0.05
       }
     }
   ]
@@ -49,11 +50,12 @@ Solid {
       baseColor 1 0 0
       metalness 0
     }
-    geometry Sphere {
-      radius 0.04
+    geometry Box {
+      size 0.05 0.05 0.05
     }
   }
   physics Physics {
+    density 1
   }
   recognitionColors [
     0.5 0 0
@@ -86,7 +88,7 @@ DEF EPUCK E-puck {
   ]
 }
 DEF Goal Solid {
-  translation 0.165756 0.0399361 0.178471
+  translation 0.149963 0.0399361 0.477258
   rotation 0 1 0 -5.307179586466759e-06
   scale 0.1 0.1 0.1
   children [
