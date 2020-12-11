@@ -1,0 +1,110 @@
+#VRML_SIM R2020b utf8
+WorldInfo {
+  info [
+    "CSCI 3302 Lab 5: Path Planning"
+    "Prof. Brad Hayes, University of Colorado Boulder, Fall 2020"
+  ]
+  title "E-Puck"
+  coordinateSystem "NUE"
+  lineScale 0.04
+}
+Viewpoint {
+  orientation 0.9999684169730747 -0.006177881420277819 -0.00499988375063271 4.922358090618489
+  position 0.6092800167985117 1.972980773738757 1.0211391054782482
+  follow "e-puck"
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  translation 0.5 0 0.5
+  floorTileSize 1 1
+  floorAppearance PBRAppearance {
+    baseColorMap ImageTexture {
+      url [
+        "texture/varnished_pine_base_color.jpg"
+      ]
+    }
+    roughness 0.2
+    metalness 0
+  }
+  wallHeight 0.05
+}
+DEF EPUCK E-puck {
+  translation 0.814848 -6.39686e-05 0.850248
+  rotation -0.10986793626329484 0.9939355742668756 0.004594647758071117 0.001316172357518348
+  controller "csci3302_final_project_base"
+  supervisor TRUE
+  turretSlot [
+    Lab4RobotisLds01 {
+    }
+  ]
+  groundSensorsSlot [
+    E-puckGroundSensors {
+    }
+  ]
+}
+DEF Goal Solid {
+  translation 0.165756 0.0399361 0.178471
+  rotation 0 1 0 -5.307179586466759e-06
+  scale 0.1 0.1 0.1
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColorMap ImageTexture {
+          url [
+            "texture/goal_mark.png"
+          ]
+          filtering 0
+        }
+        metalness 0
+      }
+      geometry Plane {
+      }
+    }
+  ]
+  name "Goal"
+}
+DEF obstacle CardboardBox {
+  translation 0.827502 0.03 0.601261
+  size 0.06 0.1 0.06
+  mass 0.3
+}
+DEF obstacle CardboardBox {
+  translation 0.327735 0.03 0.847454
+  rotation 0 1 0 4.692820414042842e-06
+  name "cardboard box(2)"
+  size 0.06 0.1 0.06
+  mass 0.3
+}
+DEF obstacle CardboardBox {
+  translation 0.3416 0.03 0.345048
+  name "cardboard box(3)"
+  size 0.06 0.1 0.06
+  mass 0.3
+}
+DEF obstacle CardboardBox {
+  translation 0.0848057 0.03 0.639316
+  name "cardboard box(4)"
+  size 0.06 0.1 0.06
+  mass 0.3
+}
+DEF obstacle CardboardBox {
+  translation 0.877716 0.03 0.210451
+  name "cardboard box(6)"
+  size 0.06 0.1 0.06
+  mass 0.3
+}
+DEF obstacle CardboardBox {
+  translation 0.592555 0.03 0.0900098
+  name "cardboard box(1)"
+  size 0.06 0.1 0.06
+  mass 0.3
+}
+DEF obstacle CardboardBox {
+  translation 0.594467 0.03 0.603958
+  name "cardboard box(5)"
+  size 0.06 0.1 0.06
+  mass 0.3
+}
