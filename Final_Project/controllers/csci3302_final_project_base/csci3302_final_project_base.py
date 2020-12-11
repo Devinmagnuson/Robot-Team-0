@@ -6,7 +6,7 @@ import math
 import time
 import copy
 import matplotlib.pyplot as plt
-from controller import Robot, Motor, DistanceSensor
+from controller import Robot, Motor, DistanceSensor, Camera
 import csci3302_final_project_supervisor
 import numpy as np
 import heapq
