@@ -9,8 +9,8 @@ WorldInfo {
   lineScale 0.04
 }
 Viewpoint {
-  orientation 0.6337870951295705 -0.7684736862148942 -0.08810284696031817 5.925273148458032
-  position 0.8891940761039964 0.6252664449157587 2.0575726662445275
+  orientation 0.9706925143688775 0.23832343390183802 0.030951306942729323 6.0171807337670105
+  position 0.5381425206368339 0.27079509138884056 1.3630092601426478
   follow "e-puck"
 }
 TexturedBackground {
@@ -32,15 +32,15 @@ RectangleArena {
   wallHeight 0.05
 }
 Solid {
-  translation 0.670555 0.04 0.624188
+  translation 0.670555 0.03 0.624188
   children [
     Shape {
       appearance PBRAppearance {
         baseColor 1 0 0
         metalness 0
       }
-      geometry Sphere {
-        radius 0.04
+      geometry Box {
+        size 0.05 0.05 0.05
       }
     }
   ]
@@ -49,8 +49,8 @@ Solid {
       baseColor 1 0 0
       metalness 0
     }
-    geometry Sphere {
-      radius 0.04
+    geometry Box {
+      size 0.05 0.05 0.05
     }
   }
   physics Physics {
