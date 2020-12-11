@@ -9,8 +9,8 @@ WorldInfo {
   lineScale 0.04
 }
 Viewpoint {
-  orientation 0.9999684169730747 -0.006177881420277819 -0.00499988375063271 4.922358090618489
-  position 0.6092800167985117 1.972980773738757 1.0211391054782482
+  orientation 0.6337870951295705 -0.7684736862148942 -0.08810284696031817 5.925273148458032
+  position 0.8891940761039964 0.6252664449157587 2.0575726662445275
   follow "e-puck"
 }
 TexturedBackground {
@@ -31,12 +31,52 @@ RectangleArena {
   }
   wallHeight 0.05
 }
+Solid {
+  translation 0.670555 0.04 0.624188
+  children [
+    Shape {
+      appearance PBRAppearance {
+        baseColor 1 0 0
+        metalness 0
+      }
+      geometry Sphere {
+        radius 0.04
+      }
+    }
+  ]
+  boundingObject Shape {
+    appearance PBRAppearance {
+      baseColor 1 0 0
+      metalness 0
+    }
+    geometry Sphere {
+      radius 0.04
+    }
+  }
+  physics Physics {
+  }
+  recognitionColors [
+    0.5 0 0
+    1 0 0
+  ]
+}
 DEF EPUCK E-puck {
   translation 0.814848 -6.39686e-05 0.850248
   rotation -0.10986793626329484 0.9939355742668756 0.004594647758071117 0.001316172357518348
   controller "csci3302_final_project_base"
   supervisor TRUE
   turretSlot [
+    Camera {
+      translation 0 0.025 0
+      name "camera1"
+      recognitionColors [
+        0.5 0 0
+        1 0 0
+      ]
+      fieldOfView 1
+      recognition Recognition {
+      }
+    }
     Lab4RobotisLds01 {
     }
   ]
