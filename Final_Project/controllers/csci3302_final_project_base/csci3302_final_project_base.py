@@ -1,7 +1,3 @@
-"""robot controller."""
-
-# You may need to import some classes of the controller module. Ex:
-#  from controller import Robot, Motor, DistanceSensor
 import math
 import time
 import copy
@@ -12,13 +8,15 @@ import numpy as np
 import heapq
 
 
-state = "get_path"
+state = "search"
 
 LIDAR_SENSOR_MAX_RANGE = 3. # Meters
 LIDAR_ANGLE_BINS = 21 # 21 Bins to cover the angular range of the lidar, centered at 10
 LIDAR_ANGLE_RANGE = 1.5708 # 90 degrees, 1.5708 radians
 
 path_changed = False
+search_found = False
+object_found = False
 
 # create the Robot instance.
 csci3302_final_project_supervisor.init_supervisor()
@@ -49,7 +47,7 @@ for i in range(LIDAR_ANGLE_BINS):
 
 
 # Map Variables
-MAP_BOUNDS = [1.,1.] 
+MAP_BOUNDS = [2.,2.] 
 CELL_RESOLUTIONS = np.array([0.1, 0.1]) # 10cm per cell
 NUM_X_CELLS = int(MAP_BOUNDS[0] / CELL_RESOLUTIONS[0])
 NUM_Y_CELLS = int(MAP_BOUNDS[1] / CELL_RESOLUTIONS[1])
@@ -58,6 +56,9 @@ world_map = np.zeros([NUM_Y_CELLS,NUM_X_CELLS])
 
 object_map = np.zeros([NUM_Y_CELLS,NUM_X_CELLS])
 
+search_map = np.zeros([NUM_Y_CELLS,NUM_X_CELLS])
+
+"""
 def populate_map(m):
     obs_list = csci3302_final_project_supervisor.supervisor_get_obstacle_positions()
     obs_size = 0.06 # 6cm boxes
@@ -72,7 +73,7 @@ def populate_map(m):
         obs_coords = np.linspace(obs_coords_lower, obs_coords_upper, 10)
         for coord in obs_coords:
             m[transform_world_coord_to_map_coord(coord)] = 1
-
+"""
 
 # Robot Pose Values
 pose_x = 0
@@ -104,9 +105,11 @@ rightMotor.setPosition(float('inf'))
 leftMotor.setVelocity(0.0)
 rightMotor.setVelocity(0.0)
 
+
 camera = robot.getCamera('camera1')
 camera.enable(SIM_TIMESTEP)
 camera.recognitionEnable(SIM_TIMESTEP)
+
 
 MAX_VEL_REDUCTION = 0.2
 
@@ -242,9 +245,18 @@ def update_map(lidar_readings_array):
     """
     @param lidar_readings_array
     """
-    global world_map, object_map, LIDAR_SENSOR_MAX_RANGE, path_changed
+    global world_map, object_map, search_map, LIDAR_SENSOR_MAX_RANGE, path_changed, search_found
+    global pose_x, pose_y
     
-    max_distance = min(LIDAR_SENSOR_MAX_RANGE, math.sqrt(2))
+    map_coord = transform_world_coord_to_map_coord((pose_x, pose_y))
+    
+    if(map_coord != None):
+    
+        if(search_map[map_coord[0], map_coord[1]] <= 1):
+                        
+            search_map[map_coord[0], map_coord[1]] = 2
+    
+    max_distance = min(LIDAR_SENSOR_MAX_RANGE, math.sqrt((MAP_BOUNDS[0]*MAP_BOUNDS[0]) + (MAP_BOUNDS[1]*MAP_BOUNDS[1])))
     
     for i in range(len(lidar_readings_array)):
         
@@ -261,7 +273,27 @@ def update_map(lidar_readings_array):
                 
                     object_map[map_coord[0], map_coord[1]] += 10
                 
-                distance -= .1
+                
+                distance -= CELL_RESOLUTIONS[0]
+            
+            if(i >= 8 and i <= 12):
+                
+                while(distance > 0):
+                
+                    world_coord = convert_lidar_reading_to_world_coord(i, distance)
+                    map_coord = transform_world_coord_to_map_coord(world_coord)
+                        
+                    if(map_coord != None):
+                            
+                        if(search_map[map_coord[0], map_coord[1]] <= 0):
+                            
+                            if(search_map[map_coord[0], map_coord[1]] == -1):
+                                
+                                search_found = True
+                            
+                            search_map[map_coord[0], map_coord[1]] = 1
+                            
+                    distance -= CELL_RESOLUTIONS[0]
                 
         else:
         
@@ -278,7 +310,17 @@ def update_map(lidar_readings_array):
                     
                         object_map[map_coord[0], map_coord[1]] -= 1
                         
-                distance -= .1
+                    if(i >= 8 and i <= 12):
+                       
+                        if(search_map[map_coord[0], map_coord[1]] <= 0):
+                            
+                            if(search_map[map_coord[0], map_coord[1]] == -1):
+                                
+                                search_found = True
+                            
+                            search_map[map_coord[0], map_coord[1]] = 1
+                        
+                distance -= CELL_RESOLUTIONS[0]
                 
     for row in range(world_map.shape[0]-1,-1,-1):
         for col in range(world_map.shape[1]):
@@ -291,22 +333,54 @@ def update_map(lidar_readings_array):
                         
                     world_map[row,col] = 1
                     
-            elif world_map[row,col] == 1:
-                world_map[row,col] = 0
+                    if search_map[row, col] == 1:
+                        
+                        search_map[row, col] = 3
+                    
+                    elif search_map[row, col] == 2:
+                    
+                        search_map[row, col] = 4
+                        
+                    
+            else:
+            
+                if world_map[row,col] == 1:
+                    world_map[row,col] = 0
+                    
+                if search_map[row, col] == 3:
+                    
+                    search_map[row, col] = 1
+                
+                elif search_map[row, col] == 4:
+                
+                    search_map[row, col] = 2
                 
     if path_changed:
         for row in range(world_map.shape[0]-1,-1,-1):
             for col in range(world_map.shape[1]):
             
-                if world_map[row,col] == 2 or world_map[row,col] == 4:
+                if world_map[row,col] == 2 or world_map[row,col] == 3 or world_map[row,col] == 4:
                     world_map[row,col] = 0
+                    
+                if search_map[row,col] == -1:
+                    search_map[row,col] = 0
+                    
+    if search_found:
+        for row in range(world_map.shape[0]-1,-1,-1):
+            for col in range(world_map.shape[1]):
+            
+                if world_map[row,col] == 2 or world_map[row,col] == 3 or world_map[row,col] == 4:
+                    world_map[row,col] = 0
+                    
+                if search_map[row,col] == -1:
+                    search_map[row,col] = 1
 
                 
 def display_map(m):
     """
     @param m: The world map matrix to visualize
     """
-    global object_map
+    global object_map, search_map
     
     m2 = copy.copy(m)
     robot_pos = transform_world_coord_to_map_coord([pose_x,pose_y])
@@ -327,6 +401,31 @@ def display_map(m):
     print(map_str)
     print(' ')
     
+    
+    #To print the search_map
+    
+    map_str = ""
+    for row in range(m.shape[0]-1,-1,-1):
+        for col in range(m.shape[1]):
+            if search_map[row,col] == -1: map_str += '[T]'
+            elif search_map[row,col] == 0: map_str += '[ ]'
+            elif search_map[row,col] == 1: map_str += '[s]'
+            elif search_map[row,col] == 2: map_str += '[S]'
+            elif search_map[row,col] == 3: map_str += '[f]'
+            elif search_map[row,col] == 4: map_str += '[F]'
+            else: map_str += '[E]'
+            
+        map_str += '\n'
+            
+            
+    print(map_str)
+    print(' ')
+    print(' ')
+    
+    
+    """
+    #To save an image of the object_map
+    
     img_scale = 20
     
     img_map = np.zeros([NUM_Y_CELLS * img_scale, NUM_X_CELLS * img_scale])
@@ -337,13 +436,14 @@ def display_map(m):
             for x in range(img_scale):
                 for y in range(img_scale):
         
-                    img_map[img_scale*row + x, img_scale*col + y] = m[m.shape[0] - row - 1, col]
+                    img_map[img_scale*row + x, img_scale*col + y] = object_map[m.shape[0] - row - 1, col]
     
     plot = np.array(img_map)
     plt.imshow(plot)
     
     cmap = plt.cm.jet
     plt.imsave('map_image.png', plot, cmap=cmap)
+    """
 
 
 
@@ -471,8 +571,8 @@ def visualize_path(path):
     return
 
 def main():
-    global robot, state, sub_state, map
-    global lidar, path_changed
+    global robot, state, sub_state, world_map, search_map
+    global lidar, path_changed, search_found, object_found
     global leftMotor, rightMotor, SIM_TIMESTEP, WHEEL_FORWARD, WHEEL_STOPPED, WHEEL_BACKWARDS
     global pose_x, pose_y, pose_theta, left_wheel_direction, right_wheel_direction
 
@@ -505,22 +605,33 @@ def main():
         
         if target_pose is None:
             target_pose = csci3302_final_project_supervisor.supervisor_get_target_pose()
-            world_map[transform_world_coord_to_map_coord(target_pose[:2])] = 3 # Goal vertex!
+            #world_map[transform_world_coord_to_map_coord(target_pose[:2])] = 3 # Goal vertex!
             print("New IK Goal Received! Target: %s" % str(target_pose))
             print("Current pose: [%5f, %5f, %5f]\t\t Target pose: [%5f, %5f, %5f]" % (pose_x, pose_y, pose_theta, target_pose[0], target_pose[1], target_pose[2]))
-            populate_map(world_map)
+            #populate_map(world_map)
             display_map(world_map)
 
         
         if path_changed:
-            state = 'get_path'
+            if(state == 'get_path' or state == 'get_waypoint' or state == 'move_to_waypoint'):
+                
+                state = 'get_path'
+                
+            if(state == 'search' or state == 'search_get_waypoint' or state == 'search_move'):
+                
+                state = 'search'
+                
             path_changed = False
+            
+        if search_found:
+            state = 'search'
+            search_found = False
+            
+        if object_found:
+            pass
 
 
-        if state == 'get_path':
-            ###################
-            # Part 2.1a
-            ###################       
+        if state == 'get_path': 
             # Compute a path from start to target_pose
             current_pose = (pose_x,pose_y)
             prev = dijkstra(transform_world_coord_to_map_coord(current_pose))
@@ -533,10 +644,9 @@ def main():
             elif( transform_world_coord_to_map_coord(current_pose) == transform_world_coord_to_map_coord(target_pose[:2])):
                 state = 'finished'
             pass
+            
         elif state == 'get_waypoint':
-            ###################
-            # Part 2.1b
-            ###################       
+               
             # Get the next waypoint from the path
             waypoint_index += 1
             
@@ -578,28 +688,111 @@ def main():
             
             if((lspeed == 0 and rspeed == 0)):
                 state = 'get_waypoint'
-            pass
+            
         elif state == 'spin':
+        
             left_wheel_direction, right_wheel_direction = -1, 1
-            leftMotor.setVelocity(-.1 * MAX_VEL_REDUCTION * leftMotor.getMaxVelocity())
-            rightMotor.setVelocity(.1 * MAX_VEL_REDUCTION * leftMotor.getMaxVelocity())
+            leftMotor.setVelocity(-1 * MAX_VEL_REDUCTION * leftMotor.getMaxVelocity())
+            rightMotor.setVelocity(1 * MAX_VEL_REDUCTION * leftMotor.getMaxVelocity())
+            
+        elif state == 'search':
+        
+            # Compute a path from start to target_pose
+            current_pose = (pose_x,pose_y)
+            
+            map_pose = transform_world_coord_to_map_coord(current_pose)
+            
+            search_map[map_pose[0], map_pose[1]] = 2
+            closest = [0, 0]
+            closest_len = 1e5
+            
+            for row in range(search_map.shape[0]-1,-1,-1):
+                for col in range(search_map.shape[1]):
+                
+                    if(search_map[col,row] == 0):
+                    
+                        map_distance = math.sqrt((row - map_pose[1])**2 + (col - map_pose[0])**2)
+                        
+                        if(map_distance < closest_len):
+                        
+                            closest = [row,col]
+                            closest_len = map_distance
+                            
+            
+            if(closest_len == 1e5):
+            
+                state = 'finished'
+            
+            else:
+                
+                prev = dijkstra(transform_world_coord_to_map_coord(current_pose))
+                path = reconstruct_path(prev, (closest[1],closest[0]))  
+                visualize_path(path)
+                
+                search_map[closest[1],closest[0]] = -1
+                
+                if(path[0] == map_pose and path[-1] == (closest[1],closest[0])):
+                    waypoint_index = 0
+                    state = 'search_get_waypoint'
+        
+        elif state == 'search_get_waypoint':
+        
+            waypoint_index += 1
+            
+            if(waypoint_index >= len(path)):
+                state = 'get_path'
+            
+            else:
+                waypoint = transform_map_coord_world_coord(path[waypoint_index])
+                wp_pose_x, wp_pose_y = waypoint
+                
+                if(waypoint_index + 1 >= len(path)):
+                
+                    wp_pose_theta = target_pose[2]
+                    
+                else:
+                    
+                    next_waypoint = transform_map_coord_world_coord(path[waypoint_index + 1])
+                    next_x, next_y = next_waypoint
+                    
+                    wp_pose_theta = math.atan2(next_y - wp_pose_y, next_x - wp_pose_x)
+                
+                if(wp_pose_theta > math.pi):
+                    
+                    wp_pose_theta -= 2*math.pi
+                    
+                elif(wp_pose_theta <= -1*math.pi):
+                    
+                    wp_pose_theta += 2*math.pi
+                
+                target_wp = (wp_pose_x, wp_pose_y, wp_pose_theta)
+                
+                state = 'search_move'            
+            pass
+        
+        elif state == 'search_move':
+        
+            lspeed, rspeed = get_wheel_speeds(target_wp)
+            leftMotor.setVelocity(lspeed)
+            rightMotor.setVelocity(rspeed)
+            
+            if((lspeed == 0 and rspeed == 0)):
+                state = 'search_get_waypoint'
+        
         else:
+        
             # Stop
             left_wheel_direction, right_wheel_direction = 0, 0
             leftMotor.setVelocity(0)
             rightMotor.setVelocity(0)    
-            pass
+
             
         lidar_data = lidar.getRangeImage()
         update_map(lidar_data)
-            
+        
         display_map(world_map)
+        
     
     
 if __name__ == "__main__":
     main()
-
-
-
-
-
