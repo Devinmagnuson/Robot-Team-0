@@ -658,6 +658,10 @@ def main():
             state = 'push_object_path'
             object_first_found = False
             
+        if object_found:
+            if(transform_world_coord_to_map_coord(box_location) == transform_world_coord_to_map_coord(target_pose[:2])):
+                state = 'finished'
+            
 
 
         if state == 'get_path': 
@@ -756,7 +760,7 @@ def main():
             for row in range(search_map.shape[0]-1,-1,-1):
                 for col in range(search_map.shape[1]):
                 
-                    if(search_map[col,row] == 0):
+                    if(search_map[col,row] == 0 and world_map[col,row] == 0):
                     
                         map_distance = math.sqrt((row - map_pose[1])**2 + (col - map_pose[0])**2)
                         
@@ -875,10 +879,8 @@ def main():
                     push_target = (box_position[0], box_position[1] - 1)
                 elif(waypoint_map[0] == box_position[0] and waypoint_map[1] == box_position[1] - 1):
                     push_target = (box_position[0], box_position[1] + 1)
-                ##else:
-                ##    print(waypoint_map)
-                ##    print(box_position)
-                ##    state = 'push_object_path'
+                else:
+                    state = 'push_object_path'
                         
                 if not((robot_position == push_target) or (robot_position == box_position)):
                     

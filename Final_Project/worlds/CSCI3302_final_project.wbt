@@ -10,7 +10,7 @@ WorldInfo {
 }
 Viewpoint {
   orientation 0.9999044797927077 -0.011609906414145168 -0.007499424213200076 5.136051902744034
-  position 0.796080896337775 4.294853309769193 1.9785346115034852
+  position 0.7676707981652866 4.317597342463359 1.928533610586406
   follow "e-puck"
 }
 TexturedBackground {
@@ -33,7 +33,7 @@ RectangleArena {
   wallHeight 0.01
 }
 Solid {
-  translation 0.671989 0.05 -0.689229
+  translation 0.262186 0.05 -0.112433
   rotation 0 1 0 4.692820414042842e-06
   children [
     Shape {
@@ -64,7 +64,7 @@ Solid {
   ]
 }
 DEF EPUCK E-puck {
-  translation 1.5356 -6.39686e-05 0.5888
+  translation 1.31916 -6.39686e-05 -0.554109
   rotation -0.10986793626329484 0.9939355742668755 0.004594647758071117 0.0013161723575276757
   controller "csci3302_final_project_base"
   supervisor TRUE
@@ -89,7 +89,7 @@ DEF EPUCK E-puck {
   ]
 }
 DEF Goal Solid {
-  translation 1.75782 0.0399361 -0.684574
+  translation 0.254164 0.0399361 -0.619743
   rotation 0 -1 0 5.307156870259904e-06
   scale 0.1 0.1 0.1
   children [
@@ -110,25 +110,26 @@ DEF Goal Solid {
   name "Goal"
 }
 DEF obstacle CardboardBox {
-  translation 0.84625 0.03 -0.036391
+  translation 1.16048 0.03 0.0694595
   size 0.06 0.1 0.06
   mass 0.3
 }
 DEF obstacle CardboardBox {
-  translation 0.807558 0.03 0.709717
+  translation 0.724911 0.03 0.740687
   rotation 0 1 0 4.692820414042842e-06
   name "cardboard box(2)"
   size 0.06 0.1 0.06
   mass 0.3
 }
 DEF obstacle CardboardBox {
-  translation 1.7231 0.03 -0.427974
+  translation 0.63102 0.03 -0.327975
+  rotation 0 1 0 1.55771
   name "cardboard box(3)"
-  size 0.6 0.1 0.06
+  size 1.4 0.1 0.1
   mass 0.3
 }
 DEF obstacle CardboardBox {
-  translation 0.459211 0.03 0.272542
+  translation 0.987524 0.03 -0.439757
   name "cardboard box(4)"
   size 0.06 0.1 0.06
   mass 0.3
@@ -140,13 +141,13 @@ DEF obstacle CardboardBox {
   mass 0.3
 }
 DEF obstacle CardboardBox {
-  translation 1.48094 0.03 -0.13689
+  translation 1.66951 0.03 -0.529588
   name "cardboard box(1)"
   size 0.06 0.1 0.06
   mass 0.3
 }
 DEF obstacle CardboardBox {
-  translation 0.998283 0.03 0.34075
+  translation 1.39747 0.03 0.614965
   name "cardboard box(5)"
   size 0.06 0.1 0.06
   mass 0.3
