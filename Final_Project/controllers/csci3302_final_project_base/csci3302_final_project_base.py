@@ -18,6 +18,8 @@ path_changed = False
 search_found = False
 object_found = False
 
+box_location = [-1, -1]
+
 # create the Robot instance.
 csci3302_final_project_supervisor.init_supervisor()
 robot = csci3302_final_project_supervisor.supervisor
@@ -245,8 +247,9 @@ def update_map(lidar_readings_array):
     """
     @param lidar_readings_array
     """
-    global world_map, object_map, search_map, LIDAR_SENSOR_MAX_RANGE, path_changed, search_found
-    global pose_x, pose_y
+    global world_map, object_map, search_map, LIDAR_SENSOR_MAX_RANGE, path_changed, search_found, object_found
+    global pose_x, pose_y, pose_theta
+    global box_location
     
     map_coord = transform_world_coord_to_map_coord((pose_x, pose_y))
     
@@ -374,16 +377,33 @@ def update_map(lidar_readings_array):
                     
                 if search_map[row,col] == -1:
                     search_map[row,col] = 1
+                    
+                    
+    if camera.getRecognitionNumberOfObjects() > 0:
+    
+        object = camera.getRecognitionObjects()[0]
+        relative_loc = object.get_position()
+        
+        
+        x = pose_x - relative_loc[2] * math.cos(pose_theta) + relative_loc[0] * math.sin(pose_theta)
+        y = pose_y - relative_loc[2] * math.sin(pose_theta) - relative_loc[0] * math.cos(pose_theta)
+        
+        box_location = [x, y]
+        
+        object_found = True
 
                 
 def display_map(m):
     """
     @param m: The world map matrix to visualize
     """
-    global object_map, search_map
+    global object_map, search_map, box_location, object_found
     
     m2 = copy.copy(m)
     robot_pos = transform_world_coord_to_map_coord([pose_x,pose_y])
+    if(object_found):
+        box_pos = transform_world_coord_to_map_coord(box_location)
+        m2[box_pos] = 9
     m2[robot_pos] = 8
     map_str = ""
     for row in range(m.shape[0]-1,-1,-1):
@@ -394,6 +414,7 @@ def display_map(m):
             elif m2[row,col] == 3: map_str += '[G]'
             elif m2[row,col] == 4: map_str += '[S]'
             elif m2[row,col] == 8: map_str += '[r]'
+            elif m2[row,col] == 9: map_str += '[B]'
             else: map_str += '[E]'
 
         map_str += '\n'
@@ -404,6 +425,7 @@ def display_map(m):
     
     #To print the search_map
     
+    """
     map_str = ""
     for row in range(m.shape[0]-1,-1,-1):
         for col in range(m.shape[1]):
@@ -421,7 +443,7 @@ def display_map(m):
     print(map_str)
     print(' ')
     print(' ')
-    
+    """
     
     """
     #To save an image of the object_map
@@ -571,7 +593,7 @@ def visualize_path(path):
     return
 
 def main():
-    global robot, state, sub_state, world_map, search_map
+    global robot, state, sub_state, world_map, search_map, box_location
     global lidar, path_changed, search_found, object_found
     global leftMotor, rightMotor, SIM_TIMESTEP, WHEEL_FORWARD, WHEEL_STOPPED, WHEEL_BACKWARDS
     global pose_x, pose_y, pose_theta, left_wheel_direction, right_wheel_direction
@@ -584,7 +606,8 @@ def main():
 
     # Important IK Variable storing final desired pose
     target_pose = None # Populated by the supervisor, only when the target is moved.
-
+    object_first_found = True
+    push_target = None
 
     # Sensor burn-in period
     for i in range(10): robot.step(SIM_TIMESTEP)
@@ -621,29 +644,50 @@ def main():
                 
                 state = 'search'
                 
+            if(state == 'push_object_path' or state == 'push_object_waypoint' or state == 'push_move'):
+            
+                state = 'push_object_path'
+                
             path_changed = False
             
         if search_found:
             state = 'search'
             search_found = False
             
-        if object_found:
-            pass
+        if object_found and object_first_found:
+            state = 'push_object_path'
+            object_first_found = False
+            
 
 
         if state == 'get_path': 
             # Compute a path from start to target_pose
             current_pose = (pose_x,pose_y)
             prev = dijkstra(transform_world_coord_to_map_coord(current_pose))
-            path = reconstruct_path(prev, transform_world_coord_to_map_coord(target_pose[:2]))  
-            visualize_path(path)
             
-            if(path[0] == transform_world_coord_to_map_coord(current_pose) and path[-1] == transform_world_coord_to_map_coord(target_pose[:2])):
-                waypoint_index = 0
-                state = 'get_waypoint'
-            elif( transform_world_coord_to_map_coord(current_pose) == transform_world_coord_to_map_coord(target_pose[:2])):
-                state = 'finished'
-            pass
+            if(object_found):
+            
+                path = reconstruct_path(prev, push_target)  
+                visualize_path(path)
+                
+                if(transform_world_coord_to_map_coord(current_pose) == push_target):
+                    state = 'push_object_path'
+                elif(path[0] == transform_world_coord_to_map_coord(current_pose) and path[-1] == push_target):
+                    waypoint_index = 0
+                    
+                    state = 'get_waypoint'
+                pass 
+            
+            else:
+                path = reconstruct_path(prev, transform_world_coord_to_map_coord(target_pose[:2]))  
+                visualize_path(path)
+            
+                if(path[0] == transform_world_coord_to_map_coord(current_pose) and path[-1] == transform_world_coord_to_map_coord(target_pose[:2])):
+                    waypoint_index = 0
+                    state = 'get_waypoint'
+                elif(transform_world_coord_to_map_coord(current_pose) == transform_world_coord_to_map_coord(target_pose[:2])):
+                    state = 'finished'
+                pass
             
         elif state == 'get_waypoint':
                
@@ -697,6 +741,9 @@ def main():
             
         elif state == 'search':
         
+            if(object_found):
+                state = 'push_object_path'
+        
             # Compute a path from start to target_pose
             current_pose = (pose_x,pose_y)
             
@@ -734,6 +781,9 @@ def main():
                 if(path[0] == map_pose and path[-1] == (closest[1],closest[0])):
                     waypoint_index = 0
                     state = 'search_get_waypoint'
+                    
+                    if(object_found):
+                        state = 'push_object_path'
         
         elif state == 'search_get_waypoint':
         
@@ -777,7 +827,99 @@ def main():
             rightMotor.setVelocity(rspeed)
             
             if((lspeed == 0 and rspeed == 0)):
-                state = 'search_get_waypoint'
+                if(object_found):
+                    state = 'push_object_path'
+                else:
+                    state = 'search_get_waypoint'
+        
+        elif state == 'push_object_path':
+        
+            # Compute a path from start to target_pose
+            current_pose = box_location
+            
+            map_pose = transform_world_coord_to_map_coord(current_pose)
+            
+            
+            prev = dijkstra(transform_world_coord_to_map_coord(current_pose))
+            path = reconstruct_path(prev, transform_world_coord_to_map_coord(target_pose[:2]))  
+            visualize_path(path)
+                
+            if(map_pose == transform_world_coord_to_map_coord(target_pose[:2])):
+                state = 'finished'
+            elif(path[0] == map_pose and path[-1] ==  transform_world_coord_to_map_coord(target_pose[:2])):
+                waypoint_index = 0
+                state = 'push_object_waypoint'
+            
+        
+        elif state == 'push_object_waypoint':
+        
+            waypoint_index += 1
+            
+            if(waypoint_index >= len(path)):
+            
+                state = 'push_object_path'
+            
+            else:
+                box_position = transform_world_coord_to_map_coord(box_location)
+                robot_position = transform_world_coord_to_map_coord((pose_x,pose_y))
+                
+                waypoint_map = path[waypoint_index]
+                
+                waypoint = transform_map_coord_world_coord(path[waypoint_index])
+                
+                if(waypoint_map[0] == box_position[0] + 1 and waypoint_map[1] == box_position[1]):
+                    push_target = (box_position[0] - 1, box_position[1])
+                elif(waypoint_map[0] == box_position[0] - 1 and waypoint_map[1] == box_position[1]):
+                    push_target = (box_position[0] + 1, box_position[1])
+                elif(waypoint_map[0] == box_position[0] and waypoint_map[1] == box_position[1] + 1):
+                    push_target = (box_position[0], box_position[1] - 1)
+                elif(waypoint_map[0] == box_position[0] and waypoint_map[1] == box_position[1] - 1):
+                    push_target = (box_position[0], box_position[1] + 1)
+                ##else:
+                ##    print(waypoint_map)
+                ##    print(box_position)
+                ##    state = 'push_object_path'
+                        
+                if not((robot_position == push_target) or (robot_position == box_position)):
+                    
+                    state = 'get_path'
+                    
+                elif state == 'push_object_waypoint':
+                
+                    wp_pose_x, wp_pose_y = transform_map_coord_world_coord(path[waypoint_index])
+                    
+                    if(waypoint_index + 1 >= len(path)):
+                    
+                        wp_pose_theta = target_pose[2]
+                        
+                    else:
+                        
+                        next_waypoint = transform_map_coord_world_coord(path[waypoint_index + 1])
+                        next_x, next_y = next_waypoint
+                        
+                        wp_pose_theta = math.atan2(next_y - wp_pose_y, next_x - wp_pose_x)
+                    
+                    if(wp_pose_theta > math.pi):
+                        
+                        wp_pose_theta -= 2*math.pi
+                        
+                    elif(wp_pose_theta <= -1*math.pi):
+                        
+                        wp_pose_theta += 2*math.pi
+                    
+                    target_wp = (wp_pose_x, wp_pose_y, wp_pose_theta)
+                    
+                    state = 'push_move'            
+            pass
+        
+        elif state == 'push_move':
+        
+            lspeed, rspeed = get_wheel_speeds(target_wp)
+            leftMotor.setVelocity(lspeed)
+            rightMotor.setVelocity(rspeed)
+            
+            if((lspeed == 0 and rspeed == 0)):
+                state = 'push_object_waypoint'
         
         else:
         
@@ -791,6 +933,7 @@ def main():
         update_map(lidar_data)
         
         display_map(world_map)
+        print(state)
         
     
     
